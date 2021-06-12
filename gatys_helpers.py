@@ -13,7 +13,7 @@ import cv2
 import copy
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-VGG19_PATH = "/content/drive/MyDrive/NeRF/nerf-pytorch/models/vgg19.pth"
+VGG19_PATH = "models/vgg19.pth"
 
 mse = lambda x, y : torch.mean((x - y) ** 2)
 

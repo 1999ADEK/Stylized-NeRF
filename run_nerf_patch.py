@@ -13,7 +13,7 @@ from tqdm import tqdm, trange
 import matplotlib.pyplot as plt
 
 from run_nerf_helpers import *
-from gatys_helpers import StyleTransferLoss, get_style_tensor
+from stylize_helpers import StyleTransferLoss, get_style_tensor
 
 from load_llff import load_llff_data
 from load_deepvoxels import load_dv_data

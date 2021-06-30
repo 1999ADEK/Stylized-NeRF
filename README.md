@@ -23,6 +23,50 @@ or directly download the pre-trained models provided in the same repo.
 The pre-trained model weights should be placed under the folder `logs/[exp_name]`, where `[exp_name]` is the folder in which the 
 logs of the later stylization experiment will be saved.
 
+Now to run the style-transfer algorithm, please refer to [run_nerf_patch.py](run_nerf_patch.py) for all the training options. 
+Belows are some examples for different usages.
+
+_**stylize from a NeRF-pretrained model**_
+```python
+python run_nerf_patch.py \
+--config configs/fern.txt \
+--expname style1 \
+--style_path style1.jpg \
+--patch_size 80 \
+--patch_num 1 \
+--N_iters 10001 \
+--lrate 1e-5 \
+--w_content 1 \
+--w_style 1e3 \
+--w_tv 1e-4 \
+--no_batching \
+--no_resume
+```
+
+_**resume stylization**_
+```python
+python run_nerf_patch.py \
+--config configs/fern.txt \
+--expname style1 \
+--style_path style1.jpg \
+--patch_size 80 \
+--patch_num 1 \
+--N_iters 10001 \
+--lrate 1e-5 \
+--w_content 1 \
+--w_style 1e3 \
+--w_tv 1e-4 \
+--no_batching
+```
+
+_**render stylization**_
+```python
+python run_nerf_patch.py \
+--config configs/fern.txt \
+--expname style1 \
+--render_only
+```
+
 ## Acknowledgements
 This code repo is heavily based on [nerf-pytorch](https://github.com/yenchenlin/nerf-pytorch). 
 Thanks the author for his great job!

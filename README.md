@@ -1,4 +1,4 @@
-# StylizedNeRF
+# Stylized-NeRF
 
 This project aims to perform neural style transfer ([A Neural Algorithm of Artistic Style](https://arxiv.org/abs/1508.06576)) 
 on a [NeRF](https://www.matthewtancik.com/nerf) generated scene.

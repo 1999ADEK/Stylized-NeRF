@@ -3,8 +3,14 @@
 This project aims to perform neural style transfer ([A Neural Algorithm of Artistic Style](https://arxiv.org/abs/1508.06576)) 
 on a [NeRF](https://www.matthewtancik.com/nerf) generated scene.
 
-|<img src="imgs/fern.gif" alt="fern" width="200"/>|<img src="imgs/water.jpg" alt="style" width="50"/><img src="imgs/fern_stylized_2.gif" alt="fern_stylized" width="200"/>|<img src="imgs/picasso.jpg" alt="style" width="80"/><img src="imgs/fern_stylized_1.gif" alt="fern_stylized" width="200"/>|
-|---|---|---|
+
+<p align="center">
+<img src="imgs/fern.gif" alt="fern" width="200"/> <img src="imgs/water.jpg" alt="style" width="50"/> <img src="imgs/fern_stylized_2.gif" alt="fern_stylized" width="200"/> <img src="imgs/picasso.jpg" alt="style" width="80"/> <img src="imgs/fern_stylized_1.gif" alt="fern_stylized" width="200"/>
+</p>
+
+<p align="center">
+<img src="imgs/framework.png" alt="framework" width="600"/>
+</p>
 
 ## Data Preparation
 Please follow the instructions [here](https://github.com/yenchenlin/nerf-pytorch#more-datasets) to prepare the necessary data

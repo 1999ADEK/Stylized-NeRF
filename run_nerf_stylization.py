@@ -219,6 +219,8 @@ def create_nerf(args):
     # Load checkpoints
     if args.ft_path is not None and args.ft_path!='None':
         ckpts = [args.ft_path]
+    elif args.no_reload:
+        ckpts = [os.path.join(basedir, expname, 'pretrain.tar')]
     else:
         ckpts = [os.path.join(basedir, expname, f) for f in sorted(os.listdir(os.path.join(basedir, expname))) if 'tar' in f]
 
@@ -467,7 +469,7 @@ def config_parser():
     parser.add_argument("--no_reload", action='store_true', 
                         help='do not reload weights from saved ckpt')
     parser.add_argument("--no_resume", action='store_true', 
-                        help='do not resume training')
+                        help='load pretrained weights but do not resume training')
     parser.add_argument("--ft_path", type=str, default=None, 
                         help='specific weights npy file to reload for coarse network')
 
@@ -721,6 +723,7 @@ def train():
         ih = np.random.randint(args.patch_num)
         iw = np.random.randint(args.patch_num)
 
+        rays_o, rays_d = get_rays(H, W, focal, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
         coords = torch.stack(
             torch.meshgrid(torch.linspace(h*ih, h*(ih+1)-1, h)*H/(args.patch_num*h), torch.linspace(w*iw, w*(iw+1)-1, w)*W/(args.patch_num*w)), 
             -1

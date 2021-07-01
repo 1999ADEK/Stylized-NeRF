@@ -553,7 +553,7 @@ def config_parser():
                         help='number of patches')
     parser.add_argument("--w_content",   type=float, default=1, 
                         help='weight of content loss')
-    parser.add_argument("--w_style",   type=float, default=1, 
+    parser.add_argument("--w_style",   type=float, default=1e3, 
                         help='weight of style loss')
     parser.add_argument("--w_tv",   type=float, default=1e-4, 
                         help='weight of tv loss')

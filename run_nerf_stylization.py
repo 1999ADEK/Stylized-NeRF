@@ -697,30 +697,9 @@ def train():
 
             return
 
-    # Prepare raybatch tensor if batching random rays
-    N_rand = args.N_rand
-    use_batching = not args.no_batching
-    if use_batching:
-        # For random ray batching
-        print('get rays')
-        rays = np.stack([get_rays_np(H, W, focal, p) for p in poses[:,:3,:4]], 0) # [N, ro+rd, H, W, 3]
-        print('done, concats')
-        rays_rgb = np.concatenate([rays, images[:,None]], 1) # [N, ro+rd+rgb, H, W, 3]
-        rays_rgb = np.transpose(rays_rgb, [0,2,3,1,4]) # [N, H, W, ro+rd+rgb, 3]
-        rays_rgb = np.stack([rays_rgb[i] for i in i_train], 0) # train images only
-        rays_rgb = np.reshape(rays_rgb, [-1,3,3]) # [(N-1)*H*W, ro+rd+rgb, 3]
-        rays_rgb = rays_rgb.astype(np.float32)
-        print('shuffle rays')
-        np.random.shuffle(rays_rgb)
-
-        print('done')
-        i_batch = 0
-
     # Move training data to GPU
     images = torch.Tensor(images).to(device)
     poses = torch.Tensor(poses).to(device)
-    if use_batching:
-        rays_rgb = torch.Tensor(rays_rgb).to(device)
 
 
     print('Begin')
@@ -735,53 +714,24 @@ def train():
     for i in trange(start, args.N_iters+1):
         time0 = time.time()
 
-        # Sample random ray batch
-        if use_batching:
-            # Random over all images
-            batch = rays_rgb[i_batch:i_batch+N_rand] # [B, 2+1, 3*?]
-            batch = torch.transpose(batch, 0, 1)
-            batch_rays, target_s = batch[:2], batch[2]
+        # Random from one image
+        img_i = np.random.choice(i_train)
+        target = images[img_i]
+        pose = poses[img_i, :3,:4]
+        ih = np.random.randint(args.patch_num)
+        iw = np.random.randint(args.patch_num)
 
-            i_batch += N_rand
-            if i_batch >= rays_rgb.shape[0]:
-                print("Shuffle data after an epoch!")
-                rand_idx = torch.randperm(rays_rgb.shape[0])
-                rays_rgb = rays_rgb[rand_idx]
-                i_batch = 0
+        coords = torch.stack(
+            torch.meshgrid(torch.linspace(h*ih, h*(ih+1)-1, h)*H/(args.patch_num*h), torch.linspace(w*iw, w*(iw+1)-1, w)*W/(args.patch_num*w)), 
+            -1
+            )  # (h, w, 2)
 
-        else:
-            # Random from one image
-            img_i = np.random.choice(i_train)
-            target = images[img_i]
-            pose = poses[img_i, :3,:4]
-            ih = np.random.randint(args.patch_num)
-            iw = np.random.randint(args.patch_num)
-
-            if N_rand is not None:
-                rays_o, rays_d = get_rays(H, W, focal, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
-
-                if i < args.precrop_iters:
-                    dH = int(H//2 * args.precrop_frac)
-                    dW = int(W//2 * args.precrop_frac)
-                    coords = torch.stack(
-                        torch.meshgrid(
-                            torch.linspace(H//2 - dH, H//2 + dH - 1, 2*dH), 
-                            torch.linspace(W//2 - dW, W//2 + dW - 1, 2*dW)
-                        ), -1)
-                    if i == start:
-                        print(f"[Config] Center cropping of size {2*dH} x {2*dW} is enabled until iter {args.precrop_iters}")                
-                else:
-                    coords = torch.stack(
-                        torch.meshgrid(torch.linspace(h*ih, h*(ih+1)-1, h)*H/(args.patch_num*h), torch.linspace(w*iw, w*(iw+1)-1, w)*W/(args.patch_num*w)), 
-                        -1
-                        )  # (h, w, 2)
-
-                coords = torch.reshape(coords, [-1,2]).type(torch.LongTensor)  # (h*w, 2)
-                rays_o = rays_o[coords[:, 0], coords[:, 1]]  # (h*w, 3)
-                rays_d = rays_d[coords[:, 0], coords[:, 1]]  # (h*w, 3)
-                batch_rays = torch.stack([rays_o, rays_d], 0)  # (2, h*w, 3)
-                target_s = F.interpolate(target.permute(2,0,1).unsqueeze(0), size=(h*args.patch_num,w*args.patch_num))
-                target_s = target_s[:, :, h*ih:h*(ih+1), w*iw:w*(iw+1)]  # (1, 3, h, w)
+        coords = torch.reshape(coords, [-1,2]).type(torch.LongTensor)  # (h*w, 2)
+        rays_o = rays_o[coords[:, 0], coords[:, 1]]  # (h*w, 3)
+        rays_d = rays_d[coords[:, 0], coords[:, 1]]  # (h*w, 3)
+        batch_rays = torch.stack([rays_o, rays_d], 0)  # (2, h*w, 3)
+        target_s = F.interpolate(target.permute(2,0,1).unsqueeze(0), size=(h*args.patch_num,w*args.patch_num))
+        target_s = target_s[:, :, h*ih:h*(ih+1), w*iw:w*(iw+1)]  # (1, 3, h, w)
 
         #####  Core optimization loop  #####
         rgb, disp, acc, extras = render(H, W, focal, chunk=args.chunk, rays=batch_rays,
@@ -794,7 +744,6 @@ def train():
         loss = style_transfer_loss(rgb, target_s)
         psnr = mse2psnr(loss['content'])
 
-        #loss.backward()
         loss['total'] /= 255
         loss['total'].backward()
         optimizer.step()

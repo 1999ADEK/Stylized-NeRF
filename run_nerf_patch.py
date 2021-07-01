@@ -531,7 +531,7 @@ def config_parser():
                         help='will take every 1/N images as LLFF test set, paper uses 8')
 
     # logging/saving options
-    parser.add_argument("--N_iters",   type=int, default=200001, 
+    parser.add_argument("--N_iters",   type=int, default=10000, 
                         help='number of iterations')
     parser.add_argument("--i_print",   type=int, default=100, 
                         help='frequency of console printout and metric loggin')
@@ -723,7 +723,6 @@ def train():
         rays_rgb = torch.Tensor(rays_rgb).to(device)
 
 
-    #N_iters = 200000 + 1
     print('Begin')
     print('TRAIN views are', i_train)
     print('TEST views are', i_test)
@@ -733,7 +732,7 @@ def train():
     writer = SummaryWriter(os.path.join(basedir, 'summaries', expname))
     
     start = start + 1
-    for i in trange(start, args.N_iters):
+    for i in trange(start, args.N_iters+1):
         time0 = time.time()
 
         # Sample random ray batch
